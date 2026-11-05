@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenuGo | بوابة تسجيل الدخول الموحدة للوكلاء والتجار والإدارة</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { cairo: ['Cairo', 'sans-serif'] },
+                    colors: {
+                        gold: { 400: '#FACC15', 500: '#EAB308', 600: '#CA8A04' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #020617; }
+        .gold-glow { box-shadow: 0 0 30px rgba(234, 179, 8, 0.2); }
+        .role-active {
+            border-color: #EAB308 !important;
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(234, 179, 8, 0.05)) !important;
+            color: #FACC15 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-amber-500 selection:text-slate-950">
+
+    <div class="w-full max-w-xl">
+        <!-- Logo & Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex w-16 h-16 rounded-3xl bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-2xl gold-glow items-center justify-center mb-3">
+                <div class="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center text-amber-400 text-2xl font-black">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-black text-white tracking-wide">MENU <span class="text-amber-400">GO</span></h1>
+            <p class="text-xs text-slate-400 mt-1 font-semibold">بوابة الدخول والتحكم الموحدة • نظام الصلاحيات المتعدد (RBAC)</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-slate-900/90 border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <!-- Mode Switcher (Login / Register) -->
+            <div class="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800 mb-6">
+                <button id="tabLogin" onclick="switchAuthMode('login')" class="flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 bg-amber-500 text-slate-950 shadow">
+                    تسجيل الدخول
+                </button>
+                <button id="tabRegister" onclick="switchAuthMode('register')" class="flex-1 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-white transition-all duration-200">
+                    إنشاء حساب جديد
+                </button>
+            </div>
+
+            <!-- Role Selector (Merchant, Agent, Admin) -->
+            <label class="block text-xs font-bold text-slate-300 mb-2">اختر رتبة الحساب:</label>
+            <div class="grid grid-cols-3 gap-2.5 mb-6">
+                <!-- Merchant -->
+                <button type="button" onclick="selectRole('merchant')" id="btnRole_merchant" class="role-btn role-active flex flex-col items-center justify-center p-3 rounded-2xl border border-slate-800 bg-slate-950 transition hover:border-slate-700">
+                    <i class="fa-solid fa-store text-lg mb-1"></i>
+                    <span class="text-xs font-bold">تاجر / متجر</span>
+                </button>
+                <!-- Agent -->
+                <button type="button" onclick="selectRole('agent')" id="btnRole_agent" class="role-btn flex flex-col items-center justify-center p-3 rounded-2xl border border-slate-800 bg-slate-950 text-slate-400 transition hover:border-slate-700">
+                    <i class="fa-solid fa-briefcase text-lg mb-1"></i>
+                    <span class="text-xs font-bold">وكيل / مسوق</span>
+                </button>
+                <!-- Admin -->
+                <button type="button" onclick="selectRole('admin')" id="btnRole_admin" class="role-btn flex flex-col items-center justify-center p-3 rounded-2xl border border-slate-800 bg-slate-950 text-slate-400 transition hover:border-slate-700">
+                    <i class="fa-solid fa-shield-halved text-lg mb-1"></i>
+                    <span class="text-xs font-bold">مدير النظام</span>
+                </button>
+            </div>
+
+            <!-- Role Description Badge -->
+            <div id="roleBadge" class="bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl px-4 py-2 text-[11px] font-semibold mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info"></i>
+                <span id="roleBadgeText">حساب التاجر: لإدارة المنيو، الأسعار، الطاولات، واستقبال طلبات الزبائن.</span>
+            </div>
+
+            <!-- FORM -->
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <!-- Common Email / Phone -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">البريد الإلكتروني أو رقم الهاتف</label>
+                    <div class="relative">
+                        <input type="text" id="inputIdentifier" required placeholder="name@domain.com أو 010xxxxxxxx" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pr-10 pl-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                        <i class="fa-solid fa-envelope absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- Common Password -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-300">كلمة المرور</label>
+                        <a href="javascript:void(0)" onclick="alert('سيتم إرسال كود استعادة عبر الواتساب أو البريد المسجل')" class="text-[11px] text-amber-400 hover:underline">نسيت كلمة المرور؟</a>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="inputPassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pr-10 pl-10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                        <i class="fa-solid fa-lock absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">
+                            <i id="eyeIcon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC REGISTER FIELDS -->
+                <div id="registerOnlyFields" class="hidden space-y-4 pt-2 border-t border-slate-800">
+                    <!-- Common Full Name -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">الاسم الكامل / اسم المسؤول</label>
+                        <div class="relative">
+                            <input type="text" id="inputFullName" placeholder="الاسم ثلاثي" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pr-10 pl-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                            <i class="fa-solid fa-user absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- Role-Specific Fields: MERCHANT -->
+                    <div id="merchantFields" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-400 mb-1.5">اسم المطعم أو البراند التجاري</label>
+                            <input type="text" id="inputStoreName" placeholder="مثال: مطعم ربيع أو بوتيك إيليجانس" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-amber-400">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-1.5">نوع النشاط</label>
+                                <select id="inputStoreType" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-3 text-xs text-white focus:outline-none focus:border-amber-400">
+                                    <option value="restaurant">🍔 مطعم / كافيه</option>
+                                    <option value="fashion">👗 ملابس وتجزئة</option>
+                                    <option value="supermarket">🛒 ماركت ومخبوزات</option>
+                                    <option value="services">💈 خدمات متنوعة</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-1.5">رقم واتساب الطلبات</label>
+                                <input type="tel" id="inputWhatsapp" placeholder="2010xxxxxxxx" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-3 text-xs text-white font-mono focus:outline-none focus:border-amber-400">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1.5">كود الوكيل / الإحالة (اختياري للحصول على خصم)</label>
+                            <input type="text" id="inputReferral" placeholder="AGENT-XXXX" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-4 text-xs text-emerald-400 uppercase font-mono focus:outline-none focus:border-amber-400">
+                        </div>
+                    </div>
+
+                    <!-- Role-Specific Fields: AGENT -->
+                    <div id="agentFields" class="hidden space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-400 mb-1.5">المدينة / المنطقة الترويجية</label>
+                                <input type="text" id="inputAgentCity" placeholder="مثال: القاهرة / مدينة نصر" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-3 text-xs text-white focus:outline-none focus:border-amber-400">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-400 mb-1.5">رقم سحب الأرباح (Vodafone / InstaPay)</label>
+                                <input type="text" id="inputAgentPayout" placeholder="رقم المحفظة أو عنوان InstaPay" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-3 text-xs text-white font-mono focus:outline-none focus:border-amber-400">
+                            </div>
+                        </div>
+                        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 p-3 rounded-xl text-[11px]">
+                            💎 يحصل الوكيل المعتمد على نسبة فورية 30% من كل اشتراك يتم تفعيله وتجديده.
+                        </div>
+                    </div>
+
+                    <!-- Role-Specific Note: ADMIN (Admin cannot self-register directly) -->
+                    <div id="adminNotice" class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-bold text-center">
+                        ⚠️ تنبيه: لا يمكن إنشاء حساب مدير نظام تلقائياً بدون تصريح SuperAdmin مع كود المصادقة الثنائية (2FA).
+                    </div>
+                </div>
+
+                <!-- Admin 2FA Token for Login -->
+                <div id="admin2FAField" class="hidden">
+                    <label class="block text-xs font-bold text-rose-400 mb-1.5">رمز الأمان الثنائي (2FA Master Security Key)</label>
+                    <input type="password" id="input2FA" placeholder="MG-SEC-XXXX-XXXX" class="w-full bg-slate-950 border border-rose-500/40 rounded-xl py-3 px-4 text-xs text-rose-200 font-mono focus:outline-none focus:border-rose-400">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="btnSubmit" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black rounded-2xl text-sm shadow-xl transition-all duration-200 transform active:scale-98 flex items-center justify-center gap-2 mt-6">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span id="btnSubmitText">تسجيل الدخول إلى حساب التاجر</span>
+                </button>
+            </form>
+
+            <!-- Quick Demo Credentials for Testing -->
+            <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+                <span class="text-[11px] text-slate-500 font-bold block mb-2.5">حسابات تجريبية سريعة للتجربة الفورية:</span>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button onclick="fillDemo('merchant')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 text-[11px] font-bold border border-slate-700">
+                        🍔 تجربة تاجر (مطعم ربيع)
+                    </button>
+                    <button onclick="fillDemo('agent')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 text-[11px] font-bold border border-slate-700">
+                        💼 تجربة وكيل معتمد
+                    </button>
+                    <button onclick="fillDemo('admin')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 text-[11px] font-bold border border-slate-700">
+                        🛡️ تجربة مدير النظام
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let currentMode = 'login'; // 'login' or 'register'
+        let currentRole = 'merchant'; // 'merchant', 'agent', 'admin'
+
+        const roleBadges = {
+            merchant: 'حساب التاجر: لإدارة المنيو، الأسعار، الطاولات، واستقبال طلبات الزبائن وتفعيل البيجر.',
+            agent: 'حساب الوكيل: لتسجيل العملاء، متابعة المتاجر التابعة، وتأكيد اشتراكات المبيعات وسحب العمولات.',
+            admin: 'حساب مدير النظام: وصول شامل لكافة المتاجر، الوكلاء، الاشتراكات المركزية، وإعدادات الـ AI.'
+        };
+
+        function switchAuthMode(mode) {
+            currentMode = mode;
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const regFields = document.getElementById('registerOnlyFields');
+            const adminNotice = document.getElementById('adminNotice');
+
+            if (mode === 'login') {
+                tabLogin.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 bg-amber-500 text-slate-950 shadow';
+                tabRegister.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-white transition-all duration-200';
+                regFields.classList.add('hidden');
+                adminNotice.classList.add('hidden');
+            } else {
+                tabRegister.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 bg-amber-500 text-slate-950 shadow';
+                tabLogin.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-white transition-all duration-200';
+                regFields.classList.remove('hidden');
+                if (currentRole === 'admin') adminNotice.classList.remove('hidden');
+            }
+            updateSubmitBtnText();
+        }
+
+        function selectRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(b => {
+                b.classList.remove('role-active');
+                b.classList.add('text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`btnRole_${role}`);
+            activeBtn.classList.add('role-active');
+            activeBtn.classList.remove('text-slate-400');
+
+            document.getElementById('roleBadgeText').textContent = roleBadges[role];
+
+            // Toggle specific fields
+            document.getElementById('merchantFields').classList.toggle('hidden', role !== 'merchant');
+            document.getElementById('agentFields').classList.toggle('hidden', role !== 'agent');
+            document.getElementById('admin2FAField').classList.toggle('hidden', role !== 'admin');
+
+            const adminNotice = document.getElementById('adminNotice');
+            if (role === 'admin' && currentMode === 'register') {
+                adminNotice.classList.remove('hidden');
+            } else {
+                adminNotice.classList.add('hidden');
+            }
+
+            updateSubmitBtnText();
+        }
+
+        function updateSubmitBtnText() {
+            const btnText = document.getElementById('btnSubmitText');
+            const roleLabels = { merchant: 'حساب التاجر', agent: 'لوحة الوكيل', admin: 'لوحة مدير النظام' };
+            if (currentMode === 'login') {
+                btnText.textContent = `تسجيل الدخول إلى ${roleLabels[currentRole]}`;
+            } else {
+                btnText.textContent = currentRole === 'admin' ? 'طلب صلاحية أدمن من المطور' : `إنشاء ${roleLabels[currentRole]} جديد`;
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('inputPassword');
+            const icon = document.getElementById('eyeIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                pwd.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function fillDemo(role) {
+            selectRole(role);
+            switchAuthMode('login');
+            const idInp = document.getElementById('inputIdentifier');
+            const pwdInp = document.getElementById('inputPassword');
+            const tfaInp = document.getElementById('input2FA');
+
+            if (role === 'merchant') {
+                idInp.value = 'rabie@menugo.com';
+                pwdInp.value = 'rabie1234';
+            } else if (role === 'agent') {
+                idInp.value = 'agent@menugo.com';
+                pwdInp.value = 'agent1234';
+            } else {
+                idInp.value = 'admin@menugo.com';
+                pwdInp.value = 'admin1234';
+                tfaInp.value = 'MG-SEC-9901';
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('inputIdentifier').value;
+            const password = document.getElementById('inputPassword').value;
+
+            if (currentRole === 'admin' && currentMode === 'register') {
+                alert('عذراً، يتطلب تسجيل الأدمن تفعيلاً يدوياً من بيئة الخادم (Root Access)');
+                return;
+            }
+
+            // Mock Session Payload
+            const session = {
+                identifier,
+                role: currentRole,
+                mode: currentMode,
+                timestamp: Date.now(),
+                storeName: document.getElementById('inputStoreName')?.value || 'مطعم ربيع'
+            };
+
+            localStorage.setItem('menugo_auth_session', JSON.stringify(session));
+            alert(`✅ تم التحقق والمصادقة بنجاح كـ (${currentRole.toUpperCase()})! سيتم توجيهك إلى اللوحة المخصصة.`);
+            // In a production setup, redirect: window.location.href = `/${currentRole}-dashboard`;
+        }
+    </script>
+</body>
+</html>
